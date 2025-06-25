@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <title>VR view</title>
+  <title>360° Panoramic Viewer</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
   <meta name="mobile-web-app-capable" content="yes">
@@ -12,37 +12,160 @@
 </head>
 
 <body>
-  <div id="error" class="dialog">
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <h2>Loading 360° Experience</h2>
+      <p>Preparing your panoramic journey...</p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="logo">360° Viewer</div>
+    </div>
+    <div class="nav-center">
+      <div class="nav-title" id="scene-title">Panoramic Experience</div>
+    </div>
+    <div class="nav-right">
+      <button class="nav-btn" id="info-btn" title="Information">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="fullscreen-btn" title="Fullscreen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="share-btn" title="Share">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Info Panel -->
+  <div class="info-panel" id="info-panel">
+    <div class="info-content">
+      <h3>360° Panoramic Experience</h3>
+      <p>Explore this immersive panoramic environment using mouse or touch controls.</p>
+      <div class="info-stats">
+        <div class="stat">
+          <span class="stat-label">Resolution:</span>
+          <span class="stat-value">4096x1197</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Format:</span>
+          <span class="stat-value">Equirectangular</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Interactive:</span>
+          <span class="stat-value">7 Hotspots</span>
+        </div>
+      </div>
+    </div>
+    <button class="close-btn" id="close-info">&times;</button>
+  </div>
+
+  <!-- VR Container -->
+  <div id="vr-container"></div>
+
+  <!-- Bottom Controls -->
+  <div class="controls-panel">
+    <div class="controls-left">
+      <button class="control-btn" id="auto-rotate-btn" title="Auto Rotate">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
+        </svg>
+      </button>
+      <button class="control-btn" id="reset-view-btn" title="Reset View">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="controls-center">
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out">-</button>
+        <div class="zoom-slider-container">
+          <input type="range" id="zoom-slider" min="30" max="100" value="75" class="zoom-slider">
+        </div>
+        <button class="zoom-btn" id="zoom-in-btn" title="Zoom In">+</button>
+      </div>
+    </div>
+    
+    <div class="controls-right">
+      <button class="control-btn" id="vr-btn" title="Enter VR" style="display: none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.74 6H3.26C2.01 6 1 7.01 1 8.26v7.48C1 16.99 2.01 18 3.26 18h17.48c1.25 0 2.26-1.01 2.26-2.26V8.26C23 7.01 21.99 6 20.74 6zM7.5 14.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5S10 10.62 10 12s-1.12 2.5-2.5 2.5zm9 0c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5S19 10.62 19 12s-1.12 2.5-2.5 2.5z"/>
+        </svg>
+      </button>
+      <div class="quality-selector">
+        <select id="quality-select">
+          <option value="preview">Preview (1.2MB)</option>
+          <option value="medium">Medium (4.2MB)</option>
+          <option value="high">High (18MB)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hotspot Modals -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content" id="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Information</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <p>Hotspot information will appear here.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Dialog -->
+  <div id="error" class="dialog" style="display: none;">
     <div class="wrap">
       <h1 class="title">Error</h1>
       <p class="message">An unknown error occurred.</p>
     </div>
   </div>
 
-  <div id="play-overlay">
-    <img src="images/ic_play_arrow_white_24dp.svg" />
-  </div>
-
-  <a id="watermark" href="http://g.co/vr/view" target="_blank">
-    <img src="images/ic_info_outline_black_24dp.svg" />
-  </a>
-
+  <!-- WebVR Configuration -->
   <script>
     WebVRConfig = {
       BUFFER_SCALE: 0.5,
-      TOUCH_PANNER_DISABLED: false
+      TOUCH_PANNER_DISABLED: false,
+      // Use test image for now
+      image: 'images/test_pano.jpg',
+      // Progressive loading images
+      preview_image: 'images/uhd_9428_panorama_eq_preview.jpg',
+      medium_image: 'images/uhd_9428_panorama_eq_medium.jpg',
+      high_image: 'images/uhd_9428_panorama_eq.jpg',
+      default_yaw: 0,
+      is_stereo: false,
+      is_debug: false,
+      is_vr_off: false,
+      is_yaw_only: false,
+      loop: false,
+      volume: 1.0,
+      muted: false
     };
   </script>
 
-  <iframe width="100%"
-  height="100%"
-  allowfullscreen
-  frameborder="0"
-  src="images/vrhotelbooking.png">
-  </iframe>
-
+  <!-- Scripts -->
   <script src="build/three.min.js"></script>
-  <script src="build/embed.min.js"></script>
+  <script src="build/VRControls.js"></script>
+  <script src="build/VREffect.js"></script>
+  <script src="build/embed.js"></script>
 </body>
 
 </html>
